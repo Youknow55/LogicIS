@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSV File Uploader</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>CSV File Uploader</h2>
+    <input type="file" id="csvFile" accept=".csv">
+    <br><br>
+    <div id="csvData" class="hidden">
+        <br>
+        <button onclick="editCSV()">Edit CSV</button>
+        <br><br>
+        <button onclick="saveCSV()">Save CSV</button>
+        <table id="csvTable">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+        <br>
+        
+    </div>
+
+    <script>
+        var csvFileInput = document.getElementById('csvFile');
+        var csvDataContainer = document.getElementById('csvData');
+        var csvTable = document.getElementById('csvTable');
+        var originalCSVData = '';
+
+        csvFileInput.addEventListener('change', handleCSVFile, false);
+
+        function handleCSVFile(e) {
+            var file = e.target.files[0];
+            var reader = new FileReader();
+
+            reader.onload = function (event) {
+                var csvData = event.target.result;
+                originalCSVData = csvData;
+                displayCSVData(csvData);
+            };
+
+            reader.readAsText(file);
+        }
+
+        function displayCSVData(csvData) {
+            var lines = csvData.split('\n');
+            var tableHeader = lines[0].split(',');
+            var tableBody = '';
+
+            for (var i = 1; i < lines.length; i++) {
+                var cells = lines[i].split(',');
+                var row = '';
+
+                for (var j = 0; j < tableHeader.length; j++) {
+                    if (cells[j])
+                        row += '<td>' + cells[j] + '</td>';
+                    else
+                        row += '<td></td>';
+                }
+
+                tableBody += '<tr>' + row + '</tr>';
+            }
+
+            csvTable.innerHTML = '<thead><tr>' + generateTableHeader(tableHeader) + '</tr></thead><tbody>' + tableBody + '</tbody>';
+            csvDataContainer.classList.remove('hidden');
+        }
+
+        function generateTableHeader(headers) {
+            var headerHTML = '';
+
+            for (var i = 0; i < headers.length; i++) {
+                headerHTML += '<th>' + headers[i] + '</th>';
+            }
+
+            return headerHTML;
+        }
+
+        function editCSV() {
+            var rows = csvTable.rows;
+
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].cells;
+
+                for (var j = 0; j < cells.length; j++) {
+                    if (i !== 0) {
+                        cells[j].contentEditable = true;
+                    }
+                }
+            }
+        }
+
+        function saveCSV() {
+            var rows = csvTable.rows;
+            var csvContent = '';
+
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].cells;
+                var rowData = '';
+
+                for (var j = 0; j < cells.length; j++) {
+                    rowData += cells[j].innerText + ',';
+                }
+
+                csvContent += rowData.slice(0, -1) + '\n';
+            }
+
+            var downloadLink = document.createElement('a');
+            downloadLink.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvContent);
+            downloadLink.download = 'edited_data.csv';
+            downloadLink.click();
+        }
+    </script>
+</body>
+</html>
